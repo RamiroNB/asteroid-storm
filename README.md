@@ -1,4 +1,4 @@
-# Asteroid Storm
+# Asteroid Storm ☄️
 
 A Arduino Game for microcontroller atmega328
 
