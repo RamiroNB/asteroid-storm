@@ -1,54 +1,83 @@
-/* Nokia 5110 LCD AVR Library example
- *
- * Copyright (C) 2015 Sergey Denisov.
- * Written by Sergey Denisov aka LittleBuster (DenisovS21@gmail.com)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public Licence
- * as published by the Free Software Foundation; either version 3
- * of the Licence, or (at your option) any later version.
- *
- * Original library written by SkewPL, http://skew.tk
- * Custom char code by Marcelo Cohen - 2021
- */
-
+#include <stdint.h>
+#include <stdlib.h>
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdlib.h>
+#include <avr/interrupt.h>
 #include "nokia5110.h"
 
 // fazer as interrupçoes
 // fazer uma funçao para alterar a posiçao do boneco para nao ter q repetir muuti codigo
 // fazer os asteroides
+// set timer interrupt for movind the space ship
 #define TIMER_CLK (F_CPU / 1024)
-
-// sempre 2 pra esquerda e 2 pra cima
-uint8_t ship_pos[2] = {};
+#define MAX_TOP 0
+#define MAX_BOTTON 74
+#define MAX_RIGHT 0
+#define MAX_LEFT 34
 
 uint8_t ship[] = {0b00010000, 0b00010000, 0b00111000, 0b01111100, 0b01010100, 0b00111000, 0b00010000, 0b00010000};
 
-uint8_t asteroid_draw[] = {0b00011000,
-                           0b00101100,
-                           0b11111111,
-                           0b00101100,
-                           0b00011000};
+uint8_t asteroid_draw[] = {0b00011000, 0b00101100, 0b00111100, 0b00110100, 0b00011000};
 
-// set timer interrupt for movind the space ship
+uint8_t ship_pos[2] = {MAX_BOTTON, 15};
+
+ISR(PCINT2_vect)
+{
+    if (PIND & (1 << PIND0))
+    {
+        int current = ship_pos[0];
+        if ((current - 4) >= MAX_TOP)
+        {
+            ship_pos[0] = current - 4;
+            while (PIND & (1 << PD0))
+                _delay_ms(1); // debounce
+        }
+    }
+    if (PIND & (1 << PIND2))
+    {
+        if ((ship_pos[0] + 4) <= MAX_BOTTON)
+        {
+            int current = ship_pos[0];
+            ship_pos[0] = current + 4;
+            while (PIND & (1 << PD2))
+                _delay_ms(1); // debounce
+        }
+    }
+    _delay_ms(1); // debounce
+}
+ISR(TIMER1_COMPA_vect)
+{
+}
 int main(void)
 {
+    DDRD &= ~((1 << PD0) | (1 << PD1) | (1 << PD2) | (1 << PD3)); // set PD0, PD1, PD2, and PD3  inputs
+    PORTD |= (1 << PD0) | (1 << PD1) | (1 << PD2) | (1 << PD3);   // ativa pull-ups for PD0, PD1, PD2, e PD3
+
+    // ativa PCINT2_vect interruptpara todos os pinos PORTD
+    PCICR |= (1 << PCIE2);
+    PCMSK2 |= 0xFF;
+
+    // timer
+    TCCR1B |= (1 << WGM12);
+    OCR1A = (TIMER_CLK);
+    TIMSK1 |= (1 << OCIE1A);
+    TCCR1B |= (1 << CS10) | (1 << CS12); // Seta prescaler pra 1024
+
+    sei();
+
     nokia_lcd_init();
     nokia_lcd_clear();
-    nokia_lcd_set_cursor(80, 24);
-    nokia_lcd_custom(1, ship);
-    // nokia_lcd_write_string("IT'S WORKING!", 1);
-    nokia_lcd_set_cursor(70, 0);
-    nokia_lcd_write_char(1, 2);
-
-    // nokia_lcd_write_string("Nice!\001", 2);
-    // nokia_lcd_drawcircle(20, 20, 20);
-    nokia_lcd_render();
     while (1)
-        ;
+    {
+        nokia_lcd_clear();
+        nokia_lcd_custom(1, asteroid_draw);
+        nokia_lcd_custom(2, ship);
+        nokia_lcd_set_cursor(ship_pos[0], ship_pos[1]);
+        nokia_lcd_write_char(2, 2);
+        nokia_lcd_render();
+    }
+
     // while (1)
     // {
     //     nokia_lcd_clear();
