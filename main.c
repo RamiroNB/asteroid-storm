@@ -19,7 +19,7 @@
 uint8_t ship[] = {0b00010000, 0b00010000, 0b00111000, 0b01111100, 0b01010100, 0b00111000, 0b00010000, 0b00010000};
 uint8_t asteroid_draw[] = {0b00011000, 0b00101100, 0b00111100, 0b00110100, 0b00011000};
 
-uint8_t asteroids[][2] = {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}}; 
+uint8_t asteroids[][2] = {{0, 0}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}}; 
 uint8_t ship_pos[2] = {MAX_BOTTON, 15};
 
 ISR(PCINT2_vect)
@@ -67,25 +67,51 @@ ISR(PCINT2_vect)
 }
 //timer de um seg
 int count  = 0;
-int count_ve = 0;
+int count_ve = 40;
 int count_create = 0;
 int min_vel = 40;
 int seg = 0;
+
 ISR(TIMER1_COMPA_vect)
 {   count++;
     if(count == 40){
         count = 0;
         seg++;
     }
-    
-    
-    int num_asteroid = 0;
-    for(int i = 0; i<5; i++){
-       if(asteroids[i][0] != -1){
-            num_asteroid++;
-       } 
+    if(asteroids[0][0]+4>=MAX_BOTTON){
+        asteroids[0][0] = -1;
+    }else{
+        asteroids[0][0] = asteroids[0][0]+4;
     }
+
+
+
+    //condição de velocidade para movimentação
+
+        //movinetação
+        // for(int i = 0; i< 5;i++){
+        //     if(asteroids[i][0]!= -1){
+        //         asteroids[i][1] = asteroids[i][1]+4;
+        //     }
+        // }
+
+    // //limpa se no final  ERRO?
+    // for(int i = 0; i<5;i++){
+    //     if((asteroids[i][1]+4)>=MAX_BOTTON){
+    //         asteroids[i][0] = -1;
+    //         asteroids[i][1] = -1;
+    //     }
+    // }
     
+
+    // // criação em tempo constante condição e rand
+    // int num_N_asteroid = 0;
+    // for(int i = 0; i<5; i++){
+    //    if(asteroids[i][0] != -1){
+    //         num_N_asteroid++;
+    //    } 
+    // }
+
 
 }
 int main(void)
@@ -115,6 +141,14 @@ int main(void)
         nokia_lcd_set_cursor(ship_pos[0], ship_pos[1]);
         nokia_lcd_write_char(2, 2);
         nokia_lcd_render();
+        for(int i=0; i<5; i++){
+            if(asteroids[i][0]!= -1){// NÃO DEVERIA DESENHAR EM MENOS UM
+                nokia_lcd_set_cursor(asteroids[0][0], asteroids[0][1]);
+                nokia_lcd_write_char(1, 2);
+                nokia_lcd_render();
+            }
+        }
+
 
     }
 
