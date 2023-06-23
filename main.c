@@ -19,9 +19,10 @@
 uint8_t ship[] = {0b00010000, 0b00010000, 0b00111000, 0b01111100, 0b01010100, 0b00111000, 0b00010000, 0b00010000};
 uint8_t asteroid_draw[] = {0b00011000, 0b00101100, 0b00111100, 0b00110100, 0b00011000};
 
-uint8_t asteroids[][2] = {{0, 0}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}}; 
+uint8_t asteroids[][2] = {{0, 0}, {0, 0}, {0, 15}, {0, MAX_LEFT}};
 uint8_t ship_pos[2] = {MAX_BOTTON, 15};
 
+int existe[] = {1, 0, 1, 1};
 ISR(PCINT2_vect)
 {
     if (!(PIND & (1 << PIND0)))
@@ -65,54 +66,54 @@ ISR(PCINT2_vect)
         }
     }
 }
-//timer de um seg
-int count  = 0;
+// timer de um seg
+int count = 0;
 int count_ve = 40;
 int count_create = 0;
 int min_vel = 40;
 int seg = 0;
 
 ISR(TIMER1_COMPA_vect)
-{   count++;
-    if(count == 40){
+{
+    count++;
+    if (count == 40)
+    {
         count = 0;
         seg++;
     }
-    if(asteroids[0][0]+4>=MAX_BOTTON){
-        asteroids[0][0] = -1;
-    }else{
-        asteroids[0][0] = asteroids[0][0]+4;
+
+    // condição de velocidade para movimentação
+
+    // movinetação
+    for (int i = 0; i < 4; i++)
+    {
+        if (asteroids[i][0] + 4 >= MAX_BOTTON || asteroids[i][0] <= -1)
+        {
+            asteroids[i][0] = -1;
+            asteroids[i][0] = -1;
+            existe[i] = 0;
+        }
+        else
+        {
+            asteroids[i][0] = asteroids[i][0] + 4;
+        }
     }
 
-
-
-    //condição de velocidade para movimentação
-
-        //movinetação
-        // for(int i = 0; i< 5;i++){
-        //     if(asteroids[i][0]!= -1){
-        //         asteroids[i][1] = asteroids[i][1]+4;
-        //     }
-        // }
-
     // //limpa se no final  ERRO?
-    // for(int i = 0; i<5;i++){
+    // for(int i = 0; i<4;i++){
     //     if((asteroids[i][1]+4)>=MAX_BOTTON){
     //         asteroids[i][0] = -1;
     //         asteroids[i][1] = -1;
     //     }
     // }
-    
 
     // // criação em tempo constante condição e rand
     // int num_N_asteroid = 0;
-    // for(int i = 0; i<5; i++){
+    // for(int i = 0; i<4; i++){
     //    if(asteroids[i][0] != -1){
     //         num_N_asteroid++;
-    //    } 
+    //    }
     // }
-
-
 }
 int main(void)
 {
@@ -133,23 +134,26 @@ int main(void)
 
     nokia_lcd_init();
     nokia_lcd_clear();
+
     while (1)
-    {    
+    {
         nokia_lcd_clear();
         nokia_lcd_custom(1, asteroid_draw);
         nokia_lcd_custom(2, ship);
         nokia_lcd_set_cursor(ship_pos[0], ship_pos[1]);
         nokia_lcd_write_char(2, 2);
-        nokia_lcd_render();
-        for(int i=0; i<5; i++){
-            if(asteroids[i][0]!= -1){// NÃO DEVERIA DESENHAR EM MENOS UM
-                nokia_lcd_set_cursor(asteroids[0][0], asteroids[0][1]);
-                nokia_lcd_write_char(1, 2);
-                nokia_lcd_render();
+        for (int i = 0; i < 4; i++)
+        {
+            if ((asteroids[i][0] > -1) || (asteroids[i][1] > -1)) // nao ta funcionado
+            {
+                if (existe[i] == 1) // essacondicao nao funciona
+                {
+                    nokia_lcd_set_cursor(asteroids[i][0], asteroids[i][1]);
+                    nokia_lcd_write_char(1, 2);
+                }
             }
+            nokia_lcd_render();
         }
-
-
     }
 
     // while (1)
