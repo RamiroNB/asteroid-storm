@@ -19,10 +19,16 @@
 uint8_t ship[] = {0b00010000, 0b00010000, 0b00111000, 0b01111100, 0b01010100, 0b00111000, 0b00010000, 0b00010000};
 uint8_t asteroid_draw[] = {0b00011000, 0b00101100, 0b00111100, 0b00110100, 0b00011000};
 
-uint8_t asteroids[][2] = {{0, 0}, {0, 0}, {0, 15}, {0, MAX_LEFT}};
+uint8_t asteroids[][2] = {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}};
 uint8_t ship_pos[2] = {MAX_BOTTON, 15};
 
-int existe[] = {1, 0, 1, 1};
+int count = 0;
+int count_vel = 0;
+int min_vel = 10;
+int seg = 0;
+int oit_quat = 80;
+
+int existe[] = {0, 0, 0, 0};
 ISR(PCINT2_vect)
 {
     if (!(PIND & (1 << PIND0)))
@@ -67,53 +73,57 @@ ISR(PCINT2_vect)
     }
 }
 // timer de um seg
-int count = 0;
-int count_ve = 40;
-int count_create = 0;
-int min_vel = 40;
-int seg = 0;
-
 ISR(TIMER1_COMPA_vect)
 {
     count++;
-    if (count == 40)
+    count_vel++;
+    if (count == oit_quat)
     {
         count = 0;
-        seg++;
+        if (oit_quat == 80)
+            seg = seg + 2;
+        else
+            seg++;
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (existe[i] != 1)
+            {
+                existe[i] = 1;
+                asteroids[i][0] = 0;
+                asteroids[i][1] = rand() % MAX_LEFT;
+                break;
+            }
+        }
+        if (seg % 10 == 0)
+        {
+            if (min_vel > 0)
+                min_vel = min_vel - 2;
+
+            if (min_vel == 4)
+                oit_quat = 40;
+        }
     }
 
     // condição de velocidade para movimentação
-
-    // movinetação
-    for (int i = 0; i < 4; i++)
+    if (count_vel >= min_vel)
     {
-        if (asteroids[i][0] + 4 >= MAX_BOTTON || asteroids[i][0] <= -1)
+        count_vel = 0;
+        // movinetação
+        for (int i = 0; i < 4; i++)
         {
-            asteroids[i][0] = -1;
-            asteroids[i][0] = -1;
-            existe[i] = 0;
-        }
-        else
-        {
-            asteroids[i][0] = asteroids[i][0] + 4;
+            if (asteroids[i][0] + 4 >= MAX_BOTTON || asteroids[i][0] <= -1)
+            {
+                asteroids[i][0] = -1;
+                asteroids[i][0] = -1;
+                existe[i] = 0;
+            }
+            else
+            {
+                asteroids[i][0] = asteroids[i][0] + 4;
+            }
         }
     }
-
-    // //limpa se no final  ERRO?
-    // for(int i = 0; i<4;i++){
-    //     if((asteroids[i][1]+4)>=MAX_BOTTON){
-    //         asteroids[i][0] = -1;
-    //         asteroids[i][1] = -1;
-    //     }
-    // }
-
-    // // criação em tempo constante condição e rand
-    // int num_N_asteroid = 0;
-    // for(int i = 0; i<4; i++){
-    //    if(asteroids[i][0] != -1){
-    //         num_N_asteroid++;
-    //    }
-    // }
 }
 int main(void)
 {
