@@ -20,15 +20,16 @@ uint8_t ship[] = {0b00010000, 0b00010000, 0b00111000, 0b01111100, 0b01010100, 0b
 uint8_t asteroid_draw[] = {0b00011000, 0b00101100, 0b00111100, 0b00110100, 0b00011000};
 
 uint8_t asteroids[][2] = {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}};
-uint8_t ship_pos[2] = {MAX_BOTTON, 15};
+uint8_t ship_pos[2] = {70, 15};
 
 int count = 0;
 int count_vel = 0;
 int min_vel = 10;
 int seg = 0;
-int oit_quat = 80;
+int counter_change = 80;
 
-int existe[] = {0, 0, 0, 0};
+int game_over = 0;
+int asteroid_exists[] = {0, 0, 0, 0};
 ISR(PCINT2_vect)
 {
     if (!(PIND & (1 << PIND0)))
@@ -43,7 +44,7 @@ ISR(PCINT2_vect)
     }
     if (!(PIND & (1 << PIND2)))
     {
-        if ((ship_pos[0] + 5) <= MAX_BOTTON)
+        if ((ship_pos[0] + 5) <= 70)
         {
             int current = ship_pos[0];
             ship_pos[0] = current + 5;
@@ -77,19 +78,19 @@ ISR(TIMER1_COMPA_vect)
 {
     count++;
     count_vel++;
-    if (count == oit_quat)
+    if (count == counter_change)
     {
         count = 0;
-        if (oit_quat == 80)
+        if (counter_change == 80)
             seg = seg + 2;
         else
             seg++;
 
         for (int i = 0; i < 4; i++)
         {
-            if (existe[i] != 1)
+            if (asteroid_exists[i] != 1)
             {
-                existe[i] = 1;
+                asteroid_exists[i] = 1;
                 asteroids[i][0] = 0;
                 asteroids[i][1] = rand() % MAX_LEFT;
                 break;
@@ -101,7 +102,7 @@ ISR(TIMER1_COMPA_vect)
                 min_vel = min_vel - 2;
 
             if (min_vel == 4)
-                oit_quat = 40;
+                counter_change = 40;
         }
     }
 
@@ -116,7 +117,7 @@ ISR(TIMER1_COMPA_vect)
             {
                 asteroids[i][0] = -1;
                 asteroids[i][0] = -1;
-                existe[i] = 0;
+                asteroid_exists[i] = 0;
             }
             else
             {
@@ -125,6 +126,7 @@ ISR(TIMER1_COMPA_vect)
         }
     }
 }
+
 int main(void)
 {
     DDRD &= ~((1 << PD0) | (1 << PD1) | (1 << PD2) | (1 << PD3)); // set PD0, PD1, PD2, and PD3  inputs
@@ -147,21 +149,49 @@ int main(void)
 
     while (1)
     {
-        nokia_lcd_clear();
-        nokia_lcd_custom(1, asteroid_draw);
-        nokia_lcd_custom(2, ship);
-        nokia_lcd_set_cursor(ship_pos[0], ship_pos[1]);
-        nokia_lcd_write_char(2, 2);
-        for (int i = 0; i < 4; i++)
+        if (game_over == 0)
         {
-            if ((asteroids[i][0] > -1) || (asteroids[i][1] > -1)) // nao ta funcionado
+            nokia_lcd_clear();
+            nokia_lcd_custom(1, asteroid_draw);
+            nokia_lcd_custom(2, ship);
+            nokia_lcd_set_cursor(ship_pos[0], ship_pos[1]);
+            nokia_lcd_write_char(2, 2);
+            for (int i = 0; i < 4; i++)
             {
-                if (existe[i] == 1) // essacondicao nao funciona
+                if ((asteroids[i][0] > -1) || (asteroids[i][1] > -1)) // nao ta funcionado
                 {
-                    nokia_lcd_set_cursor(asteroids[i][0], asteroids[i][1]);
-                    nokia_lcd_write_char(1, 2);
+                    if (asteroid_exists[i] == 1) // essacondicao nao funciona
+                    {
+                        nokia_lcd_set_cursor(asteroids[i][0], asteroids[i][1]);
+                        nokia_lcd_write_char(1, 2);
+                    }
+                }
+                nokia_lcd_render();
+            }
+            // testar colisao
+            for (int i = 0; i < 4; i++)
+            {
+                if (asteroid_exists[i] == 1)
+                {
+                    if ((asteroids[i][0] >= ship_pos[0] && asteroids[i][0] <= ship_pos[0] + 10) && (asteroids[i][1] >= ship_pos[1] && asteroids[i][1] <= ship_pos[1] + 10))
+                    {
+                        game_over = 1;
+                        break;
+                    }
                 }
             }
+        }
+        else
+        {
+            char seg_str[255];
+            cli();
+            nokia_lcd_clear();
+            nokia_lcd_set_cursor(0, 0);
+            nokia_lcd_write_string("GAME OVER", 1); // fazer glif
+            nokia_lcd_set_cursor(0, 10);
+            nokia_lcd_write_string("SCORE: ", 1); // fazer glif
+            dtostrf(seg, 4, 2, seg_str);
+            nokia_lcd_write_string(seg_str, 1); // fazer função que pega inteiro e transforma em glif virado
             nokia_lcd_render();
         }
     }

@@ -50,7 +50,7 @@ Circuit Id: Connector-46
 
 Unique  Id: Connector-48: 
 Circuit Id: Connector-48
-<item mainComp="false" enodeid="Circ_eNode-71" valLabRot="0" boardRot="-1e+06" vflip="1" startpinid="atmega328-8-PB4" x="-184" labely="-24" boardPos="-1e+06,-1e+06" id="Connector-48" hflip="1" y="-152" labelrot="0" Show_id="false" objectName="Connector-48" pointList="-184,-152,-184,-176,-124,-176" valLabelx="0" circRot="5.21501779650294e-310" itemtype="Connector" rotation="0" valLabely="0" labelx="-16" endpinid="Pcd8544-23-PinSi" circPos="0,0"/>
+<item mainComp="false" enodeid="Circ_eNode-71" valLabRot="0" boardRot="-1e+06" vflip="1" startpinid="atmega328-8-PB4" x="-184" labely="-24" boardPos="-1e+06,-1e+06" id="Connector-48" hflip="1" y="-152" labelrot="0" Show_id="false" objectName="Connector-48" pointList="-184,-152,-124,-152,-124,-176" valLabelx="0" circRot="5.21501779650294e-310" itemtype="Connector" rotation="0" valLabely="0" labelx="-16" endpinid="Pcd8544-23-PinSi" circPos="0,0"/>
 
 Unique  Id: Connector-49: 
 Circuit Id: Connector-49
