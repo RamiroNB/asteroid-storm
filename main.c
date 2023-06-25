@@ -6,10 +6,6 @@
 #include <avr/interrupt.h>
 #include "nokia5110.h"
 
-// fazer as interrupçoes
-// fazer uma funçao para alterar a posiçao do boneco para nao ter q repetir muuti codigo
-// fazer os asteroides
-// set timer interrupt for movind the space ship
 #define TIMER_CLK (F_CPU / 1024)
 #define MAX_TOP 0
 #define MAX_BOTTON 74
@@ -169,6 +165,7 @@ int main(void)
                 nokia_lcd_render();
             }
             // testar colisao
+            // ajust collison
             for (int i = 0; i < 4; i++)
             {
                 if (asteroid_exists[i] == 1)
@@ -183,6 +180,8 @@ int main(void)
         }
         else
         {
+
+            // ajjust game over screen
             char seg_str[255];
             cli();
             nokia_lcd_clear();
@@ -195,23 +194,4 @@ int main(void)
             nokia_lcd_render();
         }
     }
-
-    // while (1)
-    // {
-    //     nokia_lcd_clear();
-    //     // for (int i = 0; i < 20; i++)
-    //     // {
-    //     //     uint8_t x1, y1, x2, y2;
-    //     //     x1 = rand() % 84;
-    //     //     y1 = rand() % 48;
-    //     //     x2 = rand() % 84;
-    //     //     y2 = rand() % 48;
-    //     //     // uint8_t r = rand() % 10;
-    //     //     nokia_lcd_drawline(x1, y1, x2, y2);
-    //     //     // nokia_lcd_drawrect(x1, y1, x2, y2);
-    //     //     // nokia_lcd_drawcircle(x1, y1, r);
-    //     // }
-    //     nokia_lcd_render();
-    //     // _delay_ms(100);
-    // }
 }
