@@ -69,7 +69,7 @@ ISR(PCINT2_vect)
         }
     }
 }
-// timer de um seg
+// timer
 ISR(TIMER1_COMPA_vect)
 {
     count++;
@@ -102,11 +102,11 @@ ISR(TIMER1_COMPA_vect)
         }
     }
 
-    // condição de velocidade para movimentação
+    // velocity condition for movement
     if (count_vel >= min_vel)
     {
         count_vel = 0;
-        // movinetação
+        // movement
         for (int i = 0; i < 4; i++)
         {
             if (asteroids[i][0] + 4 >= MAX_BOTTON || asteroids[i][0] <= -1)
@@ -126,9 +126,9 @@ ISR(TIMER1_COMPA_vect)
 int main(void)
 {
     DDRD &= ~((1 << PD0) | (1 << PD1) | (1 << PD2) | (1 << PD3)); // set PD0, PD1, PD2, and PD3  inputs
-    PORTD |= (1 << PD0) | (1 << PD1) | (1 << PD2) | (1 << PD3);   // ativa pull-ups for PD0, PD1, PD2, e PD3
+    PORTD |= (1 << PD0) | (1 << PD1) | (1 << PD2) | (1 << PD3);   // activate pull-ups for PD0, PD1, PD2, e PD3
 
-    // ativa PCINT2_vect interruptpara todos os pinos PORTD
+    // ativate PCINT2_vect interrupt for all pins PORTD
     PCICR |= (1 << PCIE2);
     PCMSK2 |= 0xFF;
 
@@ -136,7 +136,7 @@ int main(void)
     TCCR1B |= (1 << WGM12);
     OCR1A = (TIMER_CLK / 40);
     TIMSK1 |= (1 << OCIE1A);
-    TCCR1B |= (1 << CS10) | (1 << CS12); // Seta prescaler pra 1024
+    TCCR1B |= (1 << CS10) | (1 << CS12); // Set prescaler to 1024
 
     sei();
 
@@ -154,9 +154,9 @@ int main(void)
             nokia_lcd_write_char(2, 2);
             for (int i = 0; i < 4; i++)
             {
-                if ((asteroids[i][0] > -1) || (asteroids[i][1] > -1)) // nao ta funcionado
+                if ((asteroids[i][0] > -1) || (asteroids[i][1] > -1))
                 {
-                    if (asteroid_exists[i] == 1) // essacondicao nao funciona
+                    if (asteroid_exists[i] == 1)
                     {
                         nokia_lcd_set_cursor(asteroids[i][0], asteroids[i][1]);
                         nokia_lcd_write_char(1, 2);
@@ -164,12 +164,16 @@ int main(void)
                 }
                 nokia_lcd_render();
             }
-            // testar colisao
-            // ajust collison
+            // check for collision
             for (int i = 0; i < 4; i++)
             {
                 if (asteroid_exists[i] == 1)
                 {
+                    if ((ship_pos[0] + 3 >= asteroids[i][0] + 3 && ship_pos[0] + 3 <= asteroids[i][0] + 3 + 7) && (ship_pos[1] + 3 >= asteroids[i][1] + 3 && ship_pos[1] + 3 <= asteroids[i][1] + 3 + 7))
+                    {
+                        game_over = 1;
+                        break;
+                    }
                     if ((asteroids[i][0] >= ship_pos[0] && asteroids[i][0] <= ship_pos[0] + 10) && (asteroids[i][1] >= ship_pos[1] && asteroids[i][1] <= ship_pos[1] + 10))
                     {
                         game_over = 1;
@@ -180,17 +184,15 @@ int main(void)
         }
         else
         {
-
-            // ajjust game over screen
             char seg_str[255];
             cli();
             nokia_lcd_clear();
             nokia_lcd_set_cursor(0, 0);
-            nokia_lcd_write_string("GAME OVER", 1); // fazer glif
+            nokia_lcd_write_string("GAME OVER", 1);
             nokia_lcd_set_cursor(0, 10);
-            nokia_lcd_write_string("SCORE: ", 1); // fazer glif
+            nokia_lcd_write_string("SCORE: ", 1);
             dtostrf(seg, 4, 2, seg_str);
-            nokia_lcd_write_string(seg_str, 1); // fazer função que pega inteiro e transforma em glif virado
+            nokia_lcd_write_string(seg_str, 1);
             nokia_lcd_render();
         }
     }
