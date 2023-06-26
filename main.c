@@ -24,12 +24,14 @@ int min_vel = 10;
 int seg = 0;
 int counter_change = 80;
 
+int game_begin = 0;
 int game_over = 0;
 int asteroid_exists[] = {0, 0, 0, 0};
 ISR(PCINT2_vect)
 {
     if (!(PIND & (1 << PIND0)))
     {
+        game_begin = 1;
         int current = ship_pos[0];
         if ((current - 5) >= MAX_TOP)
         {
@@ -40,6 +42,7 @@ ISR(PCINT2_vect)
     }
     if (!(PIND & (1 << PIND2)))
     {
+        game_begin = 1;
         if ((ship_pos[0] + 5) <= 70)
         {
             int current = ship_pos[0];
@@ -50,6 +53,7 @@ ISR(PCINT2_vect)
     }
     if (!(PIND & (1 << PIND1)))
     {
+        game_begin = 1;
         if ((ship_pos[1] + 4) <= MAX_LEFT)
         {
             int current = ship_pos[1];
@@ -60,6 +64,7 @@ ISR(PCINT2_vect)
     }
     if (!(PIND & (1 << PIND3)))
     {
+        game_begin = 1;
         if ((ship_pos[1] - 4) >= MAX_RIGHT)
         {
             int current = ship_pos[1];
@@ -72,52 +77,55 @@ ISR(PCINT2_vect)
 // timer
 ISR(TIMER1_COMPA_vect)
 {
-    count++;
-    count_vel++;
-    if (count == counter_change)
+    if (game_begin == 1)
     {
-        count = 0;
-        if (counter_change == 80)
-            seg = seg + 2;
-        else
-            seg++;
-
-        for (int i = 0; i < 4; i++)
+        count++;
+        count_vel++;
+        if (count == counter_change)
         {
-            if (asteroid_exists[i] != 1)
-            {
-                asteroid_exists[i] = 1;
-                asteroids[i][0] = 0;
-                asteroids[i][1] = rand() % MAX_LEFT;
-                break;
-            }
-        }
-        if (seg % 10 == 0)
-        {
-            if (min_vel > 0)
-                min_vel = min_vel - 2;
-
-            if (min_vel == 4)
-                counter_change = 40;
-        }
-    }
-
-    // velocity condition for movement
-    if (count_vel >= min_vel)
-    {
-        count_vel = 0;
-        // movement
-        for (int i = 0; i < 4; i++)
-        {
-            if (asteroids[i][0] + 4 >= MAX_BOTTON || asteroids[i][0] <= -1)
-            {
-                asteroids[i][0] = -1;
-                asteroids[i][0] = -1;
-                asteroid_exists[i] = 0;
-            }
+            count = 0;
+            if (counter_change == 80)
+                seg = seg + 2;
             else
+                seg++;
+
+            for (int i = 0; i < 4; i++)
             {
-                asteroids[i][0] = asteroids[i][0] + 4;
+                if (asteroid_exists[i] != 1)
+                {
+                    asteroid_exists[i] = 1;
+                    asteroids[i][0] = 0;
+                    asteroids[i][1] = rand() % MAX_LEFT;
+                    break;
+                }
+            }
+            if (seg % 10 == 0)
+            {
+                if (min_vel > 0)
+                    min_vel = min_vel - 2;
+
+                if (min_vel == 4)
+                    counter_change = 40;
+            }
+        }
+
+        // velocity condition for movement
+        if (count_vel >= min_vel)
+        {
+            count_vel = 0;
+            // movement
+            for (int i = 0; i < 4; i++)
+            {
+                if (asteroids[i][0] + 4 >= MAX_BOTTON || asteroids[i][0] <= -1)
+                {
+                    asteroids[i][0] = -1;
+                    asteroids[i][0] = -1;
+                    asteroid_exists[i] = 0;
+                }
+                else
+                {
+                    asteroids[i][0] = asteroids[i][0] + 4;
+                }
             }
         }
     }
@@ -147,39 +155,52 @@ int main(void)
     {
         if (game_over == 0)
         {
-            nokia_lcd_clear();
-            nokia_lcd_custom(1, asteroid_draw);
-            nokia_lcd_custom(2, ship);
-            nokia_lcd_set_cursor(ship_pos[0], ship_pos[1]);
-            nokia_lcd_write_char(2, 2);
-            for (int i = 0; i < 4; i++)
+            if (game_begin == 1)
             {
-                if ((asteroids[i][0] > -1) || (asteroids[i][1] > -1))
+
+                nokia_lcd_clear();
+                nokia_lcd_custom(1, asteroid_draw);
+                nokia_lcd_custom(2, ship);
+                nokia_lcd_set_cursor(ship_pos[0], ship_pos[1]);
+                nokia_lcd_write_char(2, 2);
+                for (int i = 0; i < 4; i++)
+                {
+                    if ((asteroids[i][0] > -1) || (asteroids[i][1] > -1))
+                    {
+                        if (asteroid_exists[i] == 1)
+                        {
+                            nokia_lcd_set_cursor(asteroids[i][0], asteroids[i][1]);
+                            nokia_lcd_write_char(1, 2);
+                        }
+                    }
+                    nokia_lcd_render();
+                }
+                // check for collision
+                for (int i = 0; i < 4; i++)
                 {
                     if (asteroid_exists[i] == 1)
                     {
-                        nokia_lcd_set_cursor(asteroids[i][0], asteroids[i][1]);
-                        nokia_lcd_write_char(1, 2);
+                        if ((ship_pos[0] + 3 >= asteroids[i][0] + 3 && ship_pos[0] + 3 <= asteroids[i][0] + 3 + 7) && (ship_pos[1] + 3 >= asteroids[i][1] + 3 && ship_pos[1] + 3 <= asteroids[i][1] + 3 + 7))
+                        {
+                            game_over = 1;
+                            break;
+                        }
+                        if ((asteroids[i][0] >= ship_pos[0] && asteroids[i][0] <= ship_pos[0] + 10) && (asteroids[i][1] >= ship_pos[1] && asteroids[i][1] <= ship_pos[1] + 10))
+                        {
+                            game_over = 1;
+                            break;
+                        }
                     }
                 }
-                nokia_lcd_render();
             }
-            // check for collision
-            for (int i = 0; i < 4; i++)
+            else
             {
-                if (asteroid_exists[i] == 1)
-                {
-                    if ((ship_pos[0] + 3 >= asteroids[i][0] + 3 && ship_pos[0] + 3 <= asteroids[i][0] + 3 + 7) && (ship_pos[1] + 3 >= asteroids[i][1] + 3 && ship_pos[1] + 3 <= asteroids[i][1] + 3 + 7))
-                    {
-                        game_over = 1;
-                        break;
-                    }
-                    if ((asteroids[i][0] >= ship_pos[0] && asteroids[i][0] <= ship_pos[0] + 10) && (asteroids[i][1] >= ship_pos[1] && asteroids[i][1] <= ship_pos[1] + 10))
-                    {
-                        game_over = 1;
-                        break;
-                    }
-                }
+                nokia_lcd_clear();
+                nokia_lcd_custom(1, asteroid_draw);
+                nokia_lcd_custom(2, ship);
+                nokia_lcd_set_cursor(ship_pos[0], ship_pos[1]);
+                nokia_lcd_write_char(2, 2);
+                nokia_lcd_render();
             }
         }
         else
