@@ -173,7 +173,6 @@ int main(void)
                             nokia_lcd_write_char(1, 2);
                         }
                     }
-                    nokia_lcd_render();
                 }
                 // check for collision
                 for (int i = 0; i < 4; i++)
@@ -200,7 +199,6 @@ int main(void)
                 nokia_lcd_custom(2, ship);
                 nokia_lcd_set_cursor(ship_pos[0], ship_pos[1]);
                 nokia_lcd_write_char(2, 2);
-                nokia_lcd_render();
             }
         }
         else
@@ -214,7 +212,7 @@ int main(void)
             nokia_lcd_write_string("SCORE: ", 1);
             dtostrf(seg, 4, 2, seg_str);
             nokia_lcd_write_string(seg_str, 1);
-            nokia_lcd_render();
         }
+        nokia_lcd_render();
     }
 }
